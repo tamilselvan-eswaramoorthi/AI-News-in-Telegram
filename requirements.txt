@@ -1,0 +1,5 @@
+functions-framework==3.*
+requests==2.*
+python-telegram-bot==21.*
+beautifulsoup4==4.*
+google-genai==0.*
