@@ -16,7 +16,7 @@ class AINewsBot:
         self.chat_id = str(os.getenv("TELEGRAM_CHAT_ID"))
         self.gemini_api_key = str(os.getenv("GEMINI_API_KEY"))
 
-        self.base_url = "https://news.smol.ai/issues"
+        self.base_url = "https://news.smol.ai"
         self.gemini_client = genai.Client(api_key=self.gemini_api_key)
         self.csv_file = "sent_dates.csv"
     
@@ -63,14 +63,14 @@ class AINewsBot:
             print(f"Error logging sent date: {e}")
     
     def get_latest_issue(self, curr_date):
-        response = requests.get(self.base_url)
+        response = requests.get(self.base_url + '/issues')
         soup = BeautifulSoup(response.text, 'html.parser')
         issue_links = soup.find_all('a', href=True)
         for link in issue_links:
             href = link['href']
             if href.startswith(f'/issues/{curr_date}-'):
-                issue_number = href.split('-')[-1]
-                return f"{self.base_url}/{curr_date}-{issue_number}"
+                issue_number = href.strip()
+                return f"{self.base_url}{issue_number}"
         return None
 
     def get_ai_recap(self, issue_url):
