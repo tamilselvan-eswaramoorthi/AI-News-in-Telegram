@@ -213,7 +213,7 @@ def run_ai_news_bot(request):
                 continue
             
             # Try to fetch and send news
-            success = asyncio.run(bot.run_async(curr_date))
+            success = bot.run(curr_date)
             
             if success:
                 sent_count += 1
@@ -233,3 +233,8 @@ def run_ai_news_bot(request):
     except Exception as e:
         traceback.print_exc()
         return {'status': 'error', 'message': f'An error occurred: {str(e)}'}, 500
+    
+
+if __name__ == "__main__":
+    bot = AINewsBot()
+    bot.run('25-11-11')
