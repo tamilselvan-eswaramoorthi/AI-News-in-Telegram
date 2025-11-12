@@ -115,17 +115,23 @@ class AINewsBot:
                     role="user",
                     parts=[
                         types.Part.from_text(
-                            text=f"Summarize the following AI news item in exactly 2 concise lines add href (example <a href='https://www.google.com/'>Google</a>) to highlight urls:\n\n{text}"
+                            text=f"""Summarize the following AI news into bullet points, with each point limited to two lines.
+Do not retain and highlight any links or mentions
+Total response should be concise (200 words) and formatted for Telegram messages.
+Do not add any commentary or extra text outside the summary.
+the summary should be in telegram special format. (**bold** for bold, _italic_ for italic)
+use emoji's where appropriate
+
+AI News: 
+{text}
+
+Summary:
+"""
                         ),
                     ],
                 ),
             ]
-            generate_content_config = types.GenerateContentConfig(
-                thinking_config=types.ThinkingConfig(
-                    thinking_budget=0,
-                ),
-            )
-
+            generate_content_config = types.GenerateContentConfig()
             response_text = ""
             for chunk in self.gemini_client.models.generate_content_stream(
                 model=model,
@@ -134,72 +140,48 @@ class AINewsBot:
             ):
                 response_text += chunk.text
             
-            return response_text.strip()
+            return response_text.strip().replace("""```html""", "").replace("""```""", "")
         except Exception as e:
             print(f"Error summarizing with Gemini: {e}")
             return text  # Return original text if summarization fails
 
-    async def send_to_telegram_group(self, heading, items):
+    async def send_to_telegram_group(self, parsed_recap):
         try:
             bot = telegram.Bot(token=self.bot_token)
+            current_date = datetime.now().strftime("%d %b %Y")
+            all_news = ''
+            for heading, items in parsed_recap.items():
+                all_news += f"<b>{heading}</b>\n"
+                all_news += "━━━━━━━━━━━━━━\n\n"
+                for idx, item in enumerate(items, 1):
+                    item_text = item.get_text().strip()                        
+                    all_news += f"{idx}. {item_text}\n\n"
+
+            summarized_text = self.summarize_with_gemini(all_news)
             
-            current_time = datetime.now().strftime("%H:%M:%S")
-            
-            # Format message with HTML
-            message = f"<b>{heading}</b>\n"
-            message += "━━━━━━━━━━━━━━\n\n"
-            
-            for idx, item in enumerate(items, 1):
-                item_text = item.get_text().strip()
-                # Summarize each item to 2 lines
-                if idx == len(items):
-                    summarized_text = item_text
-                else:
-                    summarized_text = self.summarize_with_gemini(item_text)
-                message += f"{idx}. {summarized_text}\n\n"
+            message = f"<b>AI News Recap for {current_date}</b>\n\n{summarized_text}"
                         
             await bot.send_message(
                 chat_id=self.chat_id, 
                 text=message,
                 parse_mode='HTML'
             )
-            print(f"Message successfully sent at {current_time}")
+            print(f"Message successfully sent at {current_date}")
 
         except telegram.error.InvalidToken:
             print("ERROR: Bot token is invalid. Please check your BOT_TOKEN.")
         except Exception as e:
-            import traceback
             traceback.print_exc()
             print(f"An unexpected error occurred: {e}")
     
-    async def run_async(self, curr_date):
-        """Async version of run method"""
-        # Check if news for this date has already been sent
-        if self.is_date_sent(curr_date):
-            print(f"News for {curr_date} has already been sent. Skipping.")
-            return False
-        
+
+    def run(self, curr_date):
         latest_issue = self.get_latest_issue(curr_date)
         if latest_issue:
             ai_recap = self.get_ai_recap(latest_issue)
             if ai_recap:
                 parsed_recap = self.parse_ai_recap(ai_recap)
-                for heading, items in parsed_recap.items():
-                    await self.send_to_telegram_group(heading, items)
-                
-                # Log the date after successful send
-                self.log_sent_date(curr_date)
-                return True
-        return False
-
-    def run(self):
-        latest_issue = self.get_latest_issue()
-        if latest_issue:
-            ai_recap = self.get_ai_recap(latest_issue)
-            if ai_recap:
-                parsed_recap = self.parse_ai_recap(ai_recap)
-                for heading, items in parsed_recap.items():
-                    asyncio.run(self.send_to_telegram_group(heading, items))
+                asyncio.run(self.send_to_telegram_group(parsed_recap))
                 return True
         return False
 
