@@ -119,7 +119,7 @@ class AINewsBot:
 Do not retain and highlight any links or mentions
 Total response should be concise (200 words) and formatted for Telegram messages.
 Do not add any commentary or extra text outside the summary.
-the summary should be in telegram special format. (**bold** for bold, _italic_ for italic)
+the summary can be in telegram special formats bold (**bold**)
 use emoji's where appropriate
 
 AI News: 
@@ -145,10 +145,11 @@ Summary:
             print(f"Error summarizing with Gemini: {e}")
             return text  # Return original text if summarization fails
 
-    async def send_to_telegram_group(self, parsed_recap):
+    async def send_to_telegram_group(self, parsed_recap, current_date):
         try:
             bot = telegram.Bot(token=self.bot_token)
-            current_date = datetime.now().strftime("%d %b %Y")
+            # covert 25-11-11 to 11 Nov 2025
+            current_date = datetime.strptime(current_date, "%d-%m-%y").strftime("%d %b %Y")
             all_news = ''
             for heading, items in parsed_recap.items():
                 all_news += f"<b>{heading}</b>\n"
@@ -181,7 +182,7 @@ Summary:
             ai_recap = self.get_ai_recap(latest_issue)
             if ai_recap:
                 parsed_recap = self.parse_ai_recap(ai_recap)
-                asyncio.run(self.send_to_telegram_group(parsed_recap))
+                asyncio.run(self.send_to_telegram_group(parsed_recap, curr_date))
                 return True
         return False
 
