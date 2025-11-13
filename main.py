@@ -148,8 +148,7 @@ Summary:
     async def send_to_telegram_group(self, parsed_recap, current_date):
         try:
             bot = telegram.Bot(token=self.bot_token)
-            # covert 25-11-11 to 11 Nov 2025
-            current_date = datetime.strptime(current_date, "%d-%m-%y").strftime("%d %b %Y")
+            current_date = datetime.strptime(current_date, "%Y-%m-%d").strftime("%d %b %Y")
             all_news = ''
             for heading, items in parsed_recap.items():
                 all_news += f"<b>{heading}</b>\n"
@@ -234,8 +233,3 @@ def run_ai_news_bot(request):
     except Exception as e:
         traceback.print_exc()
         return {'status': 'error', 'message': f'An error occurred: {str(e)}'}, 500
-    
-
-if __name__ == "__main__":
-    bot = AINewsBot()
-    bot.run('25-11-11')
