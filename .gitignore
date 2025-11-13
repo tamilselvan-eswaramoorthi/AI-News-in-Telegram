@@ -1,2 +1,5 @@
 .venv
 .env
+gcp_key.json
+__pycache__/
+*.pyc
