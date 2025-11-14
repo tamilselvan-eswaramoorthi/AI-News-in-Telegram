@@ -90,7 +90,6 @@ class AINewsBot:
 Do not retain and highlight any links or mentions
 Total response should be concise (200 words) and formatted for Telegram messages.
 Do not add any commentary or extra text outside the summary.
-the summary can be in telegram special formats bold (**bold**)
 use emoji's where appropriate
 
 AI News: 

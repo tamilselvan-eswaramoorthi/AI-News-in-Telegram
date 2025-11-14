@@ -13,7 +13,7 @@ class Config:
     
     # Database configuration
     gcp_project_id = os.getenv("GCP_PROJECT_ID")
-    bigquery_dataset = os.getenv("BIGQUERY_DATASET", "ai_news_bot")
+    bigquery_dataset = os.getenv("BIGQUERY_DATASET", "telegram_bot")
     bigquery_table = os.getenv("BIGQUERY_TABLE", "sent_dates")
 
     gcp_key_path = os.getenv("GCP_KEY_PATH", "gcp_key.json")
